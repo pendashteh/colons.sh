@@ -5,6 +5,8 @@ declare -A _CLASS_DATA
 ####
 # Usage:
 #   student=$(new Student)
+#   $student.__set name 'Robert'
+#   name=$($student.__get name)
 ####
 new() {
   local class=$1
@@ -12,48 +14,65 @@ new() {
   [ ! -z "${_CLASS_DATA[${class},index]}" ] && $index=$(( 1 + ${_CLASS_DATA[$class,index]} ))
   local objref=${class}__$index
   _CLASS_DATA[${class},index]=$index
-  echo $objref
+  ::get_executable $objref
 }
 
 ####
+# Retrieves object reference by the given object name
 # Usage:
-#   :: student.__set name 'Robert'
-#   name=$(:: student.__get name)
+# $ ::objref this
+# > MyObjectClassName__1233
+####
+::objref() {
+  local varname=$1
+  IFS=' ' read -a parts <<< ${!varname}
+  echo ${parts[1]}
+}
+::get_executable() {
+  local objref=$1
+  local objfunc='::'
+  [ ! -z "$2" ] && objfunc=$2
+  echo $objfunc' '$objref
+}
+
+####
+# Standard object executor
+# This function is embedded in the variable names of Objects.
+# You should not need to call this object directly
 ####
 ::() {
-  [[ "$1" =~ (.*)\.(.*) ]]
-  if [ "${#BASH_REMATCH[@]}" -eq 3 ]; then
+  IFS='.' read -a parts <<< $1
+  if [ "${#parts[@]}" -eq 2 ]; then
     local args=${@:2}
-    local object_name=${BASH_REMATCH[1]}
-    local method=${BASH_REMATCH[2]}
-    if [ $object_name = 'this' ]; then
-      [ -z "$this" ] && echo 'Usage of this outside context.' && return 1
-    else
-      local objref=${!object_name}
-      [ -z "$objref" ] && echo $object_name' is not an object.' && return 1
+    local objref=${parts[0]}
+    local method=${parts[1]}
+    if [ -z "$_IS_THIS" ]; then
       local class=$(::get_class $objref)
       _class_load $class
-      this=$objref
+      this=$(::get_executable $objref '::this')
     fi
     $method $args
   fi
   [ -z $BASH_REMATCH[1] ] && echo 'Object not defined' && return
 }
-::set() {
-  local objref=$1
-  local prop=$2
-  local value=$3
-  local -A data=()
-  _CLASS_DATA[$objref,$prop]=$value
+
+####
+# Special object executer
+# @description Executes methods in the context of 'this'
+# @see ::()
+####
+::this() {
+  _IS_THIS=1 :: ${@}
 }
-::get() {
-  local objref=$1
-  local prop=$2
-  echo ${_CLASS_DATA[$objref,$prop]}
-}
+####
+# Returns the class name by the given Object reference
+# Usage:
+#   class=$(::get_class $(::objref this))
+####
 ::get_class() {
   local objref=$1
-  [[ $objref =~ ^(.*)\_\_.*$ ]] && echo ${BASH_REMATCH[1]}
+  IFS='__' read -a parts <<< $objref
+  echo ${parts[0]}
 }
 
 ##
@@ -91,12 +110,15 @@ class __BASE && {
 
   __get() {
     local prop=$1
-    ::get $this $prop
+    local objref=$(::objref this)
+    echo ${_CLASS_DATA[$objref,$prop]}
   }
 
   __set() {
     local prop=$1
-    local val=$2
-    ::set $this $prop $val
+    local value=$2
+    IFS=' ' read -a parts <<<"$this"
+    local objref=$(::objref this)
+    _CLASS_DATA[$objref,$prop]=$value
   }
 }

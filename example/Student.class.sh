@@ -3,6 +3,6 @@
 class Student extends Person && {
 
   function welcome {
-    echo "Welcome student "$(:: this.__get name)
+    echo "Welcome student "$($this.__get name)
   }
 }
