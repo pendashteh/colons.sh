@@ -7,7 +7,7 @@ Object oriented programming in bash. You heard it right; OOP for Bash!
 
 . /path/to/colons.sh
 
-student=$(new Student)
+new Student as student
 
 $student.on_board
 
@@ -45,6 +45,12 @@ class Student extends User && {
 # @file User.class.sh
 
 class User && {
+
+  declare -i uid=0
+
+  function __construct {
+    $this.__set uid $((uid+=1))
+  }
 
   function send_email {
     local subject=$1

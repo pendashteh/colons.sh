@@ -2,6 +2,10 @@
 
 declare -A _CLASS_DATA
 
+__source() {
+  _class_register_path '__BASE' $(realpath ${BASH_SOURCE})
+}
+
 ####
 # Usage:
 #   student=$(new Student)
@@ -10,11 +14,15 @@ declare -A _CLASS_DATA
 ####
 new() {
   local class=$1
+  local as='as'
+  local object_name=$3
   local index=1
-  [ ! -z "${_CLASS_DATA[${class},index]}" ] && $index=$(( 1 + ${_CLASS_DATA[$class,index]} ))
+  [ ! -z "${_CLASS_DATA[${class},index]}" ] && index=$(( 1 + ${_CLASS_DATA[$class,index]} ))
   local objref=${class}__$index
   _CLASS_DATA[${class},index]=$index
-  ::get_executable $objref
+  local objexec=$(::get_executable $objref)
+  $objexec.__construct
+  IFS= read -r "$object_name" <<< $objexec
 }
 
 ####
@@ -82,24 +90,30 @@ new() {
 #   class Student extends Person
 class() {
   local class=$1
+  CLASS_LOADED=$class
+  [ ! "$CLASS_TO_LOAD" = "$class" ] && return 1
+  local extends='extends'
+  local parent=${3:-'__BASE'}
   [ "__BASE" = "$class" ] && return
-  if [ ! "$CLASS_TO_LOAD" = "$class" ]; then
-    return 1
-  fi
-  if [ "$2" = 'extends' ]; then
-    local parent=$3
-    _class_load $parent
-  fi
+  _class_load $parent
   CLASS_LOADED=$class
 }
 _class_get_path() {
   local class=$1
-  printf '%s.class.sh' $class
+  if [ -z "${_CLASS_DATA[${class},path]}" ]; then
+    _class_register_path $class $(printf '%s.class.sh' $class)
+  fi
+  echo ${_CLASS_DATA[${class},path]}
+}
+_class_register_path() {
+  local class=$1
+  local path=$2
+  _CLASS_DATA[${class},path]=$path
 }
 _class_load() {
   local class=$1
   local path=$(_class_get_path $class)
-  [ ! -e $path ] && echo 'Failed to load class '$class && exit
+  [ ! -e $path ] && echo 'Failed to load class '$class' (looking in '$path')' && exit
   unset CLASS_LOADED
   CLASS_TO_LOAD=$class . $path
   [ ! "$CLASS_LOADED" = "$class" ] && echo 'Implementation not found for class '$class && exit
@@ -108,13 +122,20 @@ _class_load() {
 # Every class extends __BASE by default
 class __BASE && {
 
-  __get() {
+  function __construct {
+    local class=$(::get_class $this)
+    # __construct() is meant to set initial variables or
+    # perform certain actions.
+    # Stdout for __construct gets sent to /dev/null
+  }
+
+  function __get {
     local prop=$1
     local objref=$(::objref this)
     echo ${_CLASS_DATA[$objref,$prop]}
   }
 
-  __set() {
+  function __set {
     local prop=$1
     local value=$2
     IFS=' ' read -a parts <<<"$this"
@@ -122,3 +143,5 @@ class __BASE && {
     _CLASS_DATA[$objref,$prop]=$value
   }
 }
+
+__source

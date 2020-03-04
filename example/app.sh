@@ -2,11 +2,15 @@
 
 . ../colons.sh
 
-ali=$(new Student)
+new Student as ali
 $ali.ask_name
 
-pedram=$(new Person)
+new Person as pedram
 $pedram.ask_name
+
+new Student as reza
+$reza.__set name 'Reza'
 
 $ali.welcome
 $pedram.welcome
+$reza.welcome
