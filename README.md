@@ -67,15 +67,49 @@ This is how you can code in `bash` now!
 
 # Example
 Check out `./example` for a working example:
-
 ```
 $ cd ./example
 $ ./app.sh
 ```
+# Objects
+## Instantiation
+```
+#!/usr/bin/env bash
 
-# Class definitions
+new Book as notebook
+# Creats object $notebook an instance of Book class.
+```
+## Method invokation
+```
+#!/usr/bin/env bash
+
+$notebook.annotate $notes
+# Invokes method 'annotate' on $notebook with sending $notes as the first parameter
+```
+## Setting and Getting properties
+```
+#!/usr/bin/env bash
+
+$notebook.__set title 'Scraps'
+# Sets 'Scraps' as the value for the property 'title' for the object $notebook
+
+echo $($notebook.__get title)
+# Prints the value of the 'title' property on the object $notebook
+```
+
+# Classes
+## Class definition
 Every class needs to be defined in a file called `[CLASS].class.sh`
+```
+#!/usr/bin/env bash
 
+# @file GeneralClass.class.sh
+
+class GeneralClass && {
+  ...
+}
+```
+## Inheritance
 ```
 #!/usr/bin/env bash
 
