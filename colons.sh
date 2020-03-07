@@ -20,7 +20,7 @@ new() {
   [ ! -z "${_CLASS_DATA[${class},index]}" ] && index=$(( 1 + ${_CLASS_DATA[$class,index]} ))
   local objref=${class}__$index
   _CLASS_DATA[${class},index]=$index
-  local objexec=$(::get_executable $objref)
+  local objexec=$(_object_get_executable $objref)
   $objexec.__construct
   IFS= read -r "$object_name" <<< $objexec
 }
@@ -28,17 +28,17 @@ new() {
 ####
 # Retrieves object reference by the given object name
 # Usage:
-# $ ::objref this
+# $ _object_objref this
 # > MyObjectClassName__1233
 ####
-::objref() {
+_object_objref() {
   local varname=$1
   IFS=' ' read -a parts <<< ${!varname}
   echo ${parts[1]}
 }
-::get_executable() {
+_object_get_executable() {
   local objref=$1
-  local objfunc='::'
+  local objfunc='_object_'
   [ ! -z "$2" ] && objfunc=$2
   echo $objfunc' '$objref
 }
@@ -48,16 +48,16 @@ new() {
 # This function is embedded in the variable names of Objects.
 # You should not need to call this object directly
 ####
-::() {
+_object_() {
   IFS='.' read -a parts <<< $1
   if [ "${#parts[@]}" -eq 2 ]; then
     local args=${@:2}
     local objref=${parts[0]}
     local method=${parts[1]}
     if [ -z "$_IS_THIS" ]; then
-      local class=$(::get_class $objref)
+      local class=$(_object_get_class $objref)
       _class_load $class
-      this=$(::get_executable $objref '::this')
+      this=$(_object_get_executable $objref '_object_this')
     fi
     $method $args
   fi
@@ -67,17 +67,17 @@ new() {
 ####
 # Special object executer
 # @description Executes methods in the context of 'this'
-# @see ::()
+# @see _object_()
 ####
-::this() {
-  _IS_THIS=1 :: ${@}
+_object_this() {
+  _IS_THIS=1 _object_ ${@}
 }
 ####
 # Returns the class name by the given Object reference
 # Usage:
-#   class=$(::get_class $(::objref this))
+#   class=$(_object_get_class $(_object_objref this))
 ####
-::get_class() {
+_object_get_class() {
   local objref=$1
   IFS='__' read -a parts <<< $objref
   echo ${parts[0]}
@@ -123,7 +123,7 @@ _class_load() {
 class __BASE && {
 
   function __construct {
-    local class=$(::get_class $this)
+    local class=$(_object_get_class $this)
     # __construct() is meant to set initial variables or
     # perform certain actions.
     # Stdout for __construct gets sent to /dev/null
@@ -131,7 +131,7 @@ class __BASE && {
 
   function __get {
     local prop=$1
-    local objref=$(::objref this)
+    local objref=$(_object_objref this)
     echo ${_CLASS_DATA[$objref,$prop]}
   }
 
@@ -139,7 +139,7 @@ class __BASE && {
     local prop=$1
     local value=$2
     IFS=' ' read -a parts <<<"$this"
-    local objref=$(::objref this)
+    local objref=$(_object_objref this)
     _CLASS_DATA[$objref,$prop]=$value
   }
 }
