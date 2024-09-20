@@ -7,6 +7,7 @@ Object oriented programming in bash. You heard it right; OOP for Bash!
 
 source /path/to/colons.sh
 
+# Since we sourced colons.sh we can now use the new OOP keywords "new" and "as" as follows:
 new Student as student
 
 $student.on_board
