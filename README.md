@@ -2,10 +2,10 @@
 Object oriented programming in bash. You heard it right; OOP for Bash!
 
 # Usage
-```
+```bash
 # @file my-app.sh
 
-. /path/to/colons.sh
+source /path/to/colons.sh
 
 new Student as student
 
@@ -16,7 +16,7 @@ $student.send_email "Welcome abroad!"
 echo Boarding for $($student.get_name) is complete.
 ```
 
-```
+```bash
 #!/usr/bin/env bash
 
 # @file Student.class.sh
@@ -39,7 +39,7 @@ class Student extends User && {
 }
 ```
 
-```
+```bash
 #!/usr/bin/env bash
 
 # @file User.class.sh
@@ -73,21 +73,21 @@ $ ./app.sh
 ```
 # Objects
 ## Instantiation
-```
+```bash
 #!/usr/bin/env bash
 
 new Book as notebook
 # Creats object $notebook an instance of Book class.
 ```
 ## Method invokation
-```
+```bash
 #!/usr/bin/env bash
 
 $notebook.annotate $notes
 # Invokes method 'annotate' on $notebook with sending $notes as the first parameter
 ```
 ## Setting and Getting properties
-```
+```bash
 #!/usr/bin/env bash
 
 $notebook.__set title 'Scraps'
@@ -100,7 +100,7 @@ echo $($notebook.__get title)
 # Classes
 ## Class definition
 Every class needs to be defined in a file called `[CLASS].class.sh`
-```
+```bash
 #!/usr/bin/env bash
 
 # @file GeneralClass.class.sh
@@ -110,7 +110,7 @@ class GeneralClass && {
 }
 ```
 ## Inheritance
-```
+```bash
 #!/usr/bin/env bash
 
 # @file MyClass.class.sh
