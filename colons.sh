@@ -137,7 +137,7 @@ class __BASE && {
 
   function __set {
     local prop=$1
-    local value=$2
+    local value=$@
     IFS=' ' read -a parts <<<"$this"
     local objref=$(_object_objref this)
     _CLASS_DATA[$objref,$prop]=$value
